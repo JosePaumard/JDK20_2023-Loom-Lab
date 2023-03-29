@@ -6,10 +6,10 @@ You need a JDK 20 to run it. Virtual threads are a preview feature of the JDK 20
 
 ## What is This Lab About?
 
-This lab is about exploring Loom and what this project is bringing to the JDK. It focuses on two features of Loom: Virtual threads (https://openjdk.org/jeps/436), Structure Concurrency (https://openjdk.org/jeps/437), and Scoped Values (https://openjdk.org/jeps/429). These features are still preview features or incubator features, meaning that there are available for testing and evaluation, but are subject to change before making as final features. One of the differences between preview features and incubator features is that the package of a class part of an incubator feature will move to another package when it makes it as a final feature.
+This lab is about exploring Loom and what this project is bringing to the JDK. It focuses on three features of Loom: Virtual threads (https://openjdk.org/jeps/436), Structure Concurrency (https://openjdk.org/jeps/437), and Scoped Values (https://openjdk.org/jeps/429). These features are still preview features or incubator features, meaning that there are available for testing and evaluation, but are subject to change before becoming as final features. One of the differences between preview features and incubator features is that the package of a class part of an incubator feature will move to another package when it makes it as a final feature.
 
 What can you expect from this lab?
-1. a good understanding of what a virtual threads are, how you can launch and create them, and what do they bring to the concurrent programming model.
+1. A good understanding of what a virtual threads are, how you can launch and create them, and what do they bring to the concurrent programming model.
 2. Organize our asynchronous tasks using the Structured Concurrency API, and more precisely the `StructuredTaskScope` class.
     1. you will launch tasks using instances of the `StructuredTaskScope` class, and get the results from them,
     2. you will handle time-outs,
@@ -20,7 +20,7 @@ What can you expect from this lab?
 
 ### Running the Virtual Threads Exercises
 
-You can compile your code with the following command, assuming you are using the JDK 19:
+You can compile your code with the following command, assuming you are using the JDK 20:
 
 ```shell
 $ java --enable-preview --release 20 Main.java
@@ -36,7 +36,7 @@ You can learn more about preview features here: https://dev.java/learn/using-the
 
 ### Running the Structured Concurrency and the Scoped Values Exercises
 
-The classes you need for the Structured Concurrency exercises are available in an incubator module of the JDK 19, that you need to import explicitly.
+The classes you need for the Structured Concurrency exercises are available in an incubator module of the JDK 20, that you need to import explicitly.
 
 You can compile your code with the following command:
 
@@ -78,16 +78,17 @@ Loom also brings new patterns to create and launch platform threads. You need to
 
 Then try to find a similar pattern to start a virtual thread. Create a new virtual thread, with a name "virtual", similar to the previous platform thread, and start it.
 
-Do not forget to call `join()` on this virtual thread. You need to configure your IDE so that the preview features of
-your JDK 19 are enabled.
+Do not forget to call `join()` on this virtual thread. 
+
+You need to configure your IDE so that the preview features of your JDK 20 are enabled.
 
 How can you tell that the thread you have created is a virtual thread?
 
 What platform thread is used to run this virtual thread?
 
 You can also explore these two patterns and see how you can customize the threads you are launching.
-- can a virtual thread be a daemon thread?
-- how can a platform thread or a virtual thread handle thread local variables?
+- Can a virtual thread be a daemon thread?
+- How can a platform thread or a virtual thread handle thread local variables?
 
 ### D_YieldingVirtualThreads
 
@@ -141,7 +142,7 @@ Let us first explore the `StructuredTaskScope` class. This class is your main en
 
 2. Second, create and submit a task to this scope. This task is an instance of `Callable<Weather>`, because your scope is parameterized by `Weather`. You can create this `Callable` by simply calling `readWeatherFromA()`. It will produce a (not so) random `Weather` instance, after a little (random) delay. Submitting a task to a scope is done by calling its `fork()` method. It gives you a future object that you can put in a variable.
 
-3. Third, once you have submitted tasks to your scope, you should call its `join()` method. This call is blocking: `join()` will return when all your tasks have complete. Not calling `join()` will make your code fail with an exception when you call `get()` on your future objects. You can experiment that in this lab.
+3. Third, once you have submitted tasks to your scope, you should call its `join()` method. This call is blocking: `join()` will return when all your tasks have complete. Not calling `join()` will make your code fail with an exception when you call `get()` on your `Future` objects. You can experiment that in this lab.
 
 4. Fourth and last point: you can get the result of your future by calling its classical `get()` method, or even better, its new `resultNow()` method. This last method should be called only if you know that your future is complete, which is the case after you called `scope.join()`.
 
@@ -199,12 +200,12 @@ Before you start building your travel page, let us think about these two compone
 
 1. The first thing you need to implement is a timeout on the weather. If something goes wrong, and you get an exception, or if getting the weather takes to long, then you want to give a default value instead of making your whole process fail. The `StructuredTaskScope` class has just the right method for that: `joinUntil()`. If you want to set up a 100ms timeout, then you can pass `Instant.now().plusMillis(100)` to this `joinUntil()` method call. You will then have to handle a `TimeoutException`, that you can use to return your default value for the weather.
 2. Now you can create a `readTravelPage()` factory method in the `TravelPage` record, following what you did for `Weather` and `Quotation`. This method can create a scope and submit two callables to it: one to read the weather, and the other to read the quotation. You can create your own `TravelPageScope`, by extending `StructuredTaskScope`. To do that, you need to find a type parameter for this scope, that is a super type to all the objects this scope has to handle: `Weather` and `Quotation`. So far, this type is `Object`. What about you create an interface, `PageComponent` and make `Weather` and `Quotation` implement it? Then `TravelPageScope` can extend `StructuredTaskScope<PageComponent>`.
-3. From there, you can handle the weather and the quotation with futures in the `readTravelPage()` method. This will work but will make your hard to unit test. If you decide to override the `handleComplete()` method, your business logic is written in its own method, that you can easily test.
+3. From there, you can handle the weather and the quotation with futures in the `readTravelPage()` method. This will work but it will make your code hard to unit test. If you decide to override the `handleComplete()` method, your business logic is written in its own method, that you can easily test.
 4. Here are some hints to override `handleComplete()`.
 
     1. What you get is a `Future<PageCompoment>`, that can carry a value, or an exception. So there are two things you need to do: check the state of this future, and check the type of the value it carries. Checking the state first is your best choice.
     2. You can follow what you did for the `QuotationScope` class, and handle the `RUNNING` and `CANCELLED` cases in the exact same way.
-    3. Handling the `SUCCESS` case is interesting. You need to check if the produced value is a `Weather` or a `Quotation`. You can do that with a switch on types, another preview feature of the JDK 19. Because you are working with Loom, preview features are already enabled, so you can use the switch on type with no further configuration. You can even go one step further, and seal the `PageComponent` interface, only permitting `Weather` and `Quotation` to implement it. Your switch is now exhaustive without having to add a default case. You can now save the produced quotation and weather is instance fields of this scope. Make sure that they are volatile, because they need to be visible.
+    3. Handling the `SUCCESS` case is interesting. You need to check if the produced value is a `Weather` or a `Quotation`. You can do that with a switch on types, another preview feature of the JDK 20. Because you are working with Loom, preview features are already enabled, so you can use the switch on type with no further configuration. You can even go one step further, and seal the `PageComponent` interface, only permitting `Weather` and `Quotation` to implement it. Your switch is now exhaustive without having to add a default case. You can now save the produced quotation and weather is instance fields of this scope. Make sure that they are volatile, because they need to be visible.
     4. Handling the `FAILURE` case can be done in the same way. You may need to check if the exception is an instance of `Quotation.QuotationException` and handle it specifically, and catch all the other exceptions.
 
 
@@ -244,4 +245,4 @@ Consider the Travel Page example again. Suppose that accessing the Quotation ser
 
 ## Wrapping up
 
-You should now have two different extension of the `StructuredTaskScope` class, and a good understanding of how to use this class and extend it to precisely fit your business need. You should be able to very easily write unit tests for all the steps of your asynchronous processings, because all these steps are written in one method
+You should now have a good understanding of how virtual threads are working, and how you can use them in the Structured Concurrency Patterns. You also worked with Scoped Values, the pattern brough by Loom to improve the Thread Local variables patterns. 
