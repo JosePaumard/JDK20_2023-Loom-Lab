@@ -1,7 +1,7 @@
-package org.paumard.loom.solutions.B_structuredconcurrency.E_model;
+package org.paumard.loom.solutions.C_scopedvalues.B_Model;
 
 import jdk.incubator.concurrent.StructuredTaskScope;
-import org.paumard.loom.solutions.B_structuredconcurrency.E_model.PageComponent;
+import org.paumard.loom.solutions.C_scopedvalues.B_ScopedTravelPage;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -9,9 +9,19 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 
+import static org.paumard.loom.solutions.C_scopedvalues.B_ScopedTravelPage.LICENCE_KEY;
+
 public record Quotation(String agency, int amount) implements PageComponent {
 
     private static Random random = new Random();
+
+    public Quotation {
+        if (!LICENCE_KEY.isBound()) {
+            throw new QuotationException("Licence key is not bound");
+        } else if (!LICENCE_KEY.get().equals("KEY_A")) {
+            throw new QuotationException("Licence key is " + LICENCE_KEY.get());
+        }
+    }
 
     public static class QuotationException extends RuntimeException {
 

@@ -161,7 +161,7 @@ What you want to do is query more than one server, and because all results are e
 4. Then you can call `scope.result()`, that returns the first `Weather` instance it gets. Moreover, all the other callables you have submitted have been cancelled, and the corresponding virtual threads have been interrupted. You can check that by printing the state of all the futures on the console. The `Future` interface has a new method: `state()`, to do that. Note that it may happen that a future was not cancelled because the scope did not have the time to interrupt the corresponding thread.
 5. One you are done observing how these future have been cancelled, you can remove them from your code, you will not be needing them anymore.
 
-## D_ExtendingScope
+### D_ExtendingScope
 
 Extending a scope can be done to implement your own behavior. In this exercise, you will be querying several quotation servers, each giving you its own price for a given travel. What you want is the lowest price. So you need to wait for all the answers from these servers, and then get the best quotation.
 
@@ -189,7 +189,7 @@ Just some quick notes about the class you just wrote. First, it encapsulates you
 
 Writing unit tests for this class is also easy. Because all your code is synchronous, you can easily create completed futures to call your `handleComplete()` method, and check that it is doing the right thing. And the same goes for the `bestQuotation()` method. It is also a synchronous method, that is very easy to unit test.
 
-## E_BuildingTravelPage
+### E_BuildingTravelPage
 
 Now that you have a quotation and a weather, what about you build a travel page? The `TravelPage` record is there for that: it has a `quotation`component and a `weather` component.
 
@@ -207,6 +207,40 @@ Before you start building your travel page, let us think about these two compone
     3. Handling the `SUCCESS` case is interesting. You need to check if the produced value is a `Weather` or a `Quotation`. You can do that with a switch on types, another preview feature of the JDK 19. Because you are working with Loom, preview features are already enabled, so you can use the switch on type with no further configuration. You can even go one step further, and seal the `PageComponent` interface, only permitting `Weather` and `Quotation` to implement it. Your switch is now exhaustive without having to add a default case. You can now save the produced quotation and weather is instance fields of this scope. Make sure that they are volatile, because they need to be visible.
     4. Handling the `FAILURE` case can be done in the same way. You may need to check if the exception is an instance of `Quotation.QuotationException` and handle it specifically, and catch all the other exceptions.
 
+
+## The Scoped Value Exercices
+
+### A_FirstScopedValue
+
+This first exercise shows you how scoped values are working, and the several methods you need to know to use them. 
+
+First, create a scoped value of `String`. Scoped values are created using the `newInstance()` factory method.
+
+You have two methods to read the value bound to a scoped value. The first one is `isBound()`, that checks if there is a value bound, and `get()` to read the value bound. Create a task of type `Runnable` that prints the value bound to this scope value if there is one, and `UNBOUND` if there is none. Execute this runnable by calling its `run()` method. What result does it print? 
+
+You can run a task in the context of a bound scope value with the following pattern:
+
+```java
+Runnable task = ...;
+ScopedValue<String> scopedValue = ...;
+ScopedValue.where(scopedValue, "AAA").run(task);
+```
+
+You can set as many scoped valued as you need by chaining the calls to `where()`. You can only call `run(Runnable)` or `call(Callable)` once.  
+
+Run this code with the task you have created. What is now the value bound to your scoped value? 
+
+Note that you did not create any thread in this code. Scoped values are set for the running of the task you pass. This task can be a `Runnable` or a `Callable`. All the tasks that are spawned by your first task, executed in other threads or not, have access to the scoped values you set when running the first task. 
+
+Note also that when the `run(Runnable)` or `call(Callable)`, then your scoped value is not bound anymore.
+
+### B_ScopedTravelPage
+
+Consider the Travel Page example again. Suppose that accessing the Quotation server is in fact not free, and requires a licence key. This is a typical example where using scoped values can be interesting. 
+
+1. Create a scoped value in the main method of one of your solutions. This scoped value should be visible from any other class, putting it in a public static field may be a good solution. 
+2. Run the construction of your travel page in the context of this scoped value. You can bind it to your licence key. 
+3. Then check if this scoped value has been properly bound when creating your Quotation objects. Remember that you can add your validation rules to the compact constructor of a record. If no licence key has been bound, or if the value is not the right one, then throw an exception to prevent the creation of this Quotation. 
 
 ## Wrapping up
 
