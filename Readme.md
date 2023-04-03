@@ -6,7 +6,7 @@ You need a JDK 20 to run it. Virtual threads are a preview feature of the JDK 20
 
 ## What is This Lab About?
 
-This lab is about exploring Loom and what this project is bringing to the JDK. It focuses on three features of Loom: Virtual threads (https://openjdk.org/jeps/436), Structure Concurrency (https://openjdk.org/jeps/437), and Scoped Values (https://openjdk.org/jeps/429). These features are still preview features or incubator features, meaning that there are available for testing and evaluation, but are subject to change before becoming as final features. One of the differences between preview features and incubator features is that the package of a class part of an incubator feature will move to another package when it makes it as a final feature.
+This lab is about exploring Loom and what this project is bringing to the JDK. It focuses on three features of Loom: Virtual threads (https://openjdk.org/jeps/436), Structured Concurrency (https://openjdk.org/jeps/437), and Scoped Values (https://openjdk.org/jeps/429). These features are still preview features or incubator features, meaning that there are available for testing and evaluation, but are subject to change before becoming as final features. One of the differences between preview features and incubator features is that the package of a class part of an incubator feature will move to another package when it makes it as a final feature.
 
 What can you expect from this lab?
 1. A good understanding of what a virtual threads are, how you can launch and create them, and what do they bring to the concurrent programming model.
